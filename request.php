@@ -5,9 +5,9 @@ last updated: 07/03/23
 time: 21:03
 */
 
-$title = isset($_GET['title']) ? trim($_GET['title']) : '';
-$artist = isset($_GET['artist']) ? trim($_GET['artist']) : '';
-$message = isset($_GET['message']) ? trim($_GET['message']) : '';
+$title = isset($_GET['title']) ? htmlspecialchars($_GET['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+$artist = isset($_GET['artist']) ? htmlspecialchars($_GET['artist'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+$message = isset($_GET['message']) ? htmlspecialchars($_GET['message'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
 
 // Validate input
 if (empty($title) || empty($artist)) {
