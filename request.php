@@ -2,41 +2,44 @@
 /*
 made by: djkeiran.co.uk
 last updated: 09/03/23
-time: 10:49
+time: 22:58
 */
 
 // Set rate limit configuration
-$maxRequestsPerMinute = 5;
-$cacheExpireTimeInSeconds = 60;
+$maxRequestsPerDuration = 5;
+$rateLimitDurationInSeconds = 60;
 
-// Connect to memcached server
-$memcached = new Memcached();
-$memcached->addServer('localhost', 11211);
+// Connect to Redis server
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
 
 // Get client IP address
 $clientIp = $_SERVER['REMOTE_ADDR'];
 
-// Generate cache key for client IP address and current minute
-$cacheKey = "rate_limit_$clientIp_" . date('Y-m-d H:i:00');
+// Generate cache key for client IP address
+$cacheKey = "rate_limit_$clientIp";
 
-// Get number of requests made in the current minute
-$requestCount = $memcached->get($cacheKey);
+// Get number of requests made in the last X minutes
+$requestCount = $redis->get($cacheKey);
 
 if ($requestCount === false) {
-  // No previous requests made in the current minute, set count to 1 and cache for the current minute
-  $memcached->set($cacheKey, 1, $cacheExpireTimeInSeconds);
-} elseif ($requestCount < $maxRequestsPerMinute) {
-  // Increment request count and update cache for the current minute
-  $memcached->increment($cacheKey);
+  // No previous requests made, set count to 1 and cache for the duration
+  $redis->setex($cacheKey, $rateLimitDurationInSeconds, 1);
+} elseif ($requestCount < $maxRequestsPerDuration) {
+  // Increment request count and update cache for the duration
+  $redis->incr($cacheKey);
 } else {
   // Rate limit exceeded, return error response
   header('Content-Type: application/json');
   echo json_encode(array(
     'success' => false,
-    'message' => "Rate limit exceeded. Maximum of $maxRequestsPerMinute requests per minute allowed",
+    'message' => "Rate limit exceeded. Maximum of $maxRequestsPerDuration requests per $rateLimitDurationInSeconds seconds allowed",
   ));
   exit;
 }
+
+// Get the remaining time until the rate limit resets
+$remainingTime = $redis->ttl($cacheKey);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $title = isset($_POST['title']) ? htmlspecialchars($_POST['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
