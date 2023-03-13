@@ -5,41 +5,14 @@ last updated: 09/03/23
 time: 22:58
 */
 
-// Set rate limit configuration
-$maxRequestsPerDuration = 5;
-$rateLimitDurationInSeconds = 60;
-
-// Connect to Redis server
-$redis = new Redis();
-$redis->connect('127.0.0.1', 6379);
-
-// Get client IP address
-$clientIp = $_SERVER['REMOTE_ADDR'];
-
-// Generate cache key for client IP address
-$cacheKey = "rate_limit_$clientIp";
-
-// Get number of requests made in the last X minutes
-$requestCount = $redis->get($cacheKey);
-
-if ($requestCount === false) {
-  // No previous requests made, set count to 1 and cache for the duration
-  $redis->setex($cacheKey, $rateLimitDurationInSeconds, 1);
-} elseif ($requestCount < $maxRequestsPerDuration) {
-  // Increment request count and update cache for the duration
-  $redis->incr($cacheKey);
-} else {
-  // Rate limit exceeded, return error response
-  header('Content-Type: application/json');
-  echo json_encode(array(
-    'success' => false,
-    'message' => "Rate limit exceeded. Maximum of $maxRequestsPerDuration requests per $rateLimitDurationInSeconds seconds allowed",
-  ));
-  exit;
+// dont allow get only allow post
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    header('Content-Type: application/json');
+    echo json_encode(array(
+      'success' => false,
+      'message' => "INVALID METHOD",
+    ));
 }
-
-// Get the remaining time until the rate limit resets
-$remainingTime = $redis->ttl($cacheKey);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $title = isset($_POST['title']) ? htmlspecialchars($_POST['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
