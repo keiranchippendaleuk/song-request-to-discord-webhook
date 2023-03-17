@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Song Request to a discord webhook</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script>
       $(document).ready(function() {
         $('#request-form').submit(function(e) {
